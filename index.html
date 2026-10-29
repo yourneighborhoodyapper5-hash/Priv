@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>Kernals — Chat</title>
+  <style>
+    :root{color-scheme:light;--bg:#f5f7fb;--panel:#fff;--ink:#172033;--muted:#778198;--line:#e7eaf1;--blue:#2878f0;--blue2:#1765db;--soft:#edf4ff;--danger:#c62828;--shadow:0 18px 55px #1b2c4b12}
+    *{box-sizing:border-box}html,body{height:100%;margin:0}body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+    button,input{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+    .shell{min-height:100%;display:grid;place-items:center;padding:22px}
+    .auth-card{width:min(420px,100%);background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:var(--shadow)}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:22px;letter-spacing:-.6px}.logo{width:42px;height:42px;border-radius:15px;background:linear-gradient(135deg,#4d9cff,#2864e8);display:grid;place-items:center;color:white;font-weight:900;box-shadow:0 7px 18px #2878f033}
+    .sub{color:var(--muted);line-height:1.5;font-size:14px;margin:10px 0 24px}.field{display:grid;gap:7px;margin:14px 0}.field label{font-size:13px;font-weight:700;color:#414b60}.field input{width:100%;border:1px solid #dfe4ed;background:#fbfcfe;border-radius:12px;padding:13px 14px;outline:none}.field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #2878f01a}
+    .primary,.secondary{border:0;border-radius:12px;padding:12px 15px;font-weight:700}.primary{background:var(--blue);color:#fff}.primary:hover{background:var(--blue2)}.secondary{background:#f0f3f8;color:#344057}.wide{width:100%;margin-top:8px}.auth-actions{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:16px}.text-btn{background:none;border:0;color:var(--blue);font-weight:700;padding:7px 0;font-size:13px}.status{min-height:20px;margin-top:12px;font-size:13px;color:var(--muted);line-height:1.45}.status.error{color:var(--danger)}.status.ok{color:#16804a}
+    .app{height:100dvh;min-height:520px;padding:18px;display:grid;place-items:center}.chat-window{width:min(1050px,100%);height:min(780px,calc(100dvh - 36px));min-height:480px;background:var(--panel);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);display:grid;grid-template-columns:285px minmax(0,1fr);overflow:hidden}
+    .sidebar{border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;background:#fcfdff}.side-top{padding:22px 19px 18px;border-bottom:1px solid var(--line)}.side-top .brand{font-size:20px}.side-heading{display:flex;align-items:center;justify-content:space-between;margin-top:26px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#8992a4}.profile{margin-top:auto;padding:15px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;min-width:0}.avatar{width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:#e3edff;color:#2566d8;display:grid;place-items:center;font-weight:800}.profile-info{min-width:0;flex:1}.profile-info strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.profile-info small{display:block;color:var(--muted);margin-top:3px;font-size:11px}.logout{border:0;background:transparent;color:var(--muted);padding:8px;font-size:12px}
+    .conversation{display:flex;flex-direction:column;min-width:0;min-height:0}.chat-header{height:78px;flex:0 0 78px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 24px;gap:12px}.chat-header .avatar{width:42px;height:42px;flex-basis:42px;background:#e8f1ff}.head-copy{flex:1;min-width:0}.head-copy strong{display:block;font-size:15px}.head-copy span{display:block;font-size:12px;color:var(--muted);margin-top:4px}.online-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#2cb67d;margin-right:5px}
+    .messages{flex:1;min-height:0;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:14px;background:linear-gradient(#fff,#fff)}.empty{margin:auto;text-align:center;max-width:280px;color:var(--muted);font-size:13px;line-height:1.6}.empty .empty-icon{font-size:30px;margin-bottom:10px}.message{max-width:min(76%,520px);display:flex;flex-direction:column;gap:5px;align-self:flex-start}.message.mine{align-self:flex-end;align-items:flex-end}.meta{font-size:11px;color:var(--muted);display:flex;gap:7px;align-items:center}.bubble{padding:11px 14px;border-radius:18px 18px 18px 5px;background:#f0f2f7;color:#263148;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;font-size:14px}.mine .bubble{background:var(--blue);color:white;border-radius:18px 18px 5px 18px}.composer-wrap{padding:15px 20px 19px;border-top:1px solid var(--line);background:#fff}.composer{display:flex;align-items:flex-end;gap:10px;background:#f3f5f9;border:1px solid #edf0f5;border-radius:18px;padding:8px 8px 8px 15px}.composer input{flex:1;min-width:0;border:0;outline:none;background:transparent;padding:9px 0;color:var(--ink)}.send{width:42px;height:42px;flex:0 0 42px;border:0;border-radius:14px;background:var(--blue);color:#fff;font-size:18px}.send:disabled{opacity:.45;cursor:not-allowed}.hint{font-size:11px;color:#929bad;margin:9px 4px 0}
+    @media(max-width:650px){.app{padding:0;min-height:0}.chat-window{height:100dvh;min-height:0;border:0;border-radius:0;grid-template-columns:1fr}.sidebar{display:none}.chat-header{height:70px;flex-basis:70px;padding:0 16px}.messages{padding:18px 14px}.composer-wrap{padding:12px 12px calc(12px + env(safe-area-inset-bottom))}.message{max-width:88%}.auth-card{padding:25px 21px}.shell{padding:14px}}
+  </style>
+</head>
+<body>
+  <main id="authView" class="shell">
+    <section class="auth-card">
+      <div class="brand"><div class="logo">K</div><span>Kernals</span></div>
+      <p class="sub">A little space to talk. Sign in to open your messages.</p>
+      <form id="authForm">
+        <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+        <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Your password" minlength="6" required></div>
+        <button id="authSubmit" class="primary wide" type="submit">Sign in</button>
+      </form>
+      <div class="auth-actions"><button id="toggleMode" class="text-btn" type="button">Create an account</button><button id="resetPassword" class="text-btn" type="button">Forgot password?</button></div>
+      <div id="authStatus" class="status" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <main id="chatView" class="app hidden">
+    <section class="chat-window">
+      <aside class="sidebar">
+        <div class="side-top">
+          <div class="brand"><div class="logo">K</div><span>Kernals</span></div>
+          <div class="side-heading"><span>Messages</span><span>●</span></div>
+          <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:12px 0 0">Your shared chat space. Messages sync live across signed-in devices.</p>
+        </div>
+        <div class="profile">
+          <div id="sideAvatar" class="avatar">K</div>
+          <div class="profile-info"><strong id="sideEmail">Signed in</strong><small>Connected to Kernals</small></div>
+          <button id="signOut" class="logout" type="button">Log out</button>
+        </div>
+      </aside>
+      <section class="conversation">
+        <header class="chat-header">
+          <div id="headAvatar" class="avatar">K</div>
+          <div class="head-copy"><strong>Kernals Chat</strong><span><i class="online-dot"></i><span id="connectionLabel">Connecting…</span></span></div>
+          <button id="mobileSignOut" class="secondary" type="button" style="padding:9px 11px;font-size:12px">Log out</button>
+        </header>
+        <div id="messages" class="messages" aria-live="polite">
+          <div class="empty"><div class="empty-icon">✦</div>Welcome to Kernals. Your conversation will appear here.</div>
+        </div>
+        <div class="composer-wrap">
+          <form id="messageForm" class="composer">
+            <input id="messageInput" maxlength="2000" autocomplete="off" placeholder="Write a message…" aria-label="Write a message" required>
+            <button id="sendButton" class="send" type="submit" aria-label="Send message" disabled>➤</button>
+          </form>
+          <div class="hint">Enter to send · Keep it kind.</div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+      createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
+    } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js";
+    import {
+      getFirestore, collection, addDoc, query, orderBy, limit,
+      onSnapshot, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC8QLXhKJaRHdi_BpC-Sm-A8uc7uhOAQwY",
+      authDomain: "privatechat-b39d3.firebaseapp.com",
+      projectId: "privatechat-b39d3",
+      storageBucket: "privatechat-b39d3.firebasestorage.app",
+      messagingSenderId: "1031388982221",
+      appId: "1:1031388982221:web:2807b429e387eff320f284",
+      measurementId: "G-VFFT75E2GN"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const $ = (id) => document.getElementById(id);
+
+    const authView = $("authView");
+    const chatView = $("chatView");
+    const authForm = $("authForm");
+    const authStatus = $("authStatus");
+    const authSubmit = $("authSubmit");
+    const toggleMode = $("toggleMode");
+    const resetPassword = $("resetPassword");
+    const messagesEl = $("messages");
+    const messageForm = $("messageForm");
+    const messageInput = $("messageInput");
+    const sendButton = $("sendButton");
+    let createMode = false;
+    let unsubscribeMessages = null;
+    let currentUser = null;
+    let sending = false;
+
+    function setAuthStatus(message, kind = "") {
+      authStatus.textContent = message;
+      authStatus.className = `status ${kind}`;
+    }
+    function friendlyError(error) {
+      const code = error?.code || "";
+      const messages = {
+        "auth/invalid-email": "That email address doesn't look valid.",
+        "auth/user-not-found": "No account was found with that email.",
+        "auth/wrong-password": "That password is incorrect.",
+        "auth/invalid-credential": "Email or password is incorrect.",
+        "auth/email-already-in-use": "An account with that email already exists.",
+        "auth/weak-password": "Use a stronger password (at least 6 characters).",
+        "auth/too-many-requests": "Too many attempts. Wait a bit and try again.",
+        "auth/network-request-failed": "Network request failed. Check the connection or network filter.",
+        "permission-denied": "Firestore denied access. Check that you're signed in and have published the Kernals security rules.",
+        "unavailable": "Firebase is temporarily unavailable. Try again."
+      };
+      return messages[code] || error?.message || "Something went wrong. Try again.";
+    }
+
+    toggleMode.addEventListener("click", () => {
+      createMode = !createMode;
+      $("authSubmit").textContent = createMode ? "Create account" : "Sign in";
+      toggleMode.textContent = createMode ? "Already have an account? Sign in" : "Create an account";
+      $("password").autocomplete = createMode ? "new-password" : "current-password";
+      setAuthStatus(createMode ? "Use an email and a password with at least 6 characters." : "");
+    });
+
+    authForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      authSubmit.disabled = true;
+      setAuthStatus(createMode ? "Creating your account…" : "Signing in…");
+      const email = $("email").value.trim();
+      const password = $("password").value;
+      try {
+        if (createMode) {
+          await createUserWithEmailAndPassword(auth, email, password);
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+        }
+      } catch (error) {
+        setAuthStatus(friendlyError(error), "error");
+      } finally {
+        authSubmit.disabled = false;
+      }
+    });
+
+    resetPassword.addEventListener("click", async () => {
+      const email = $("email").value.trim();
+      if (!email) {
+        setAuthStatus("Enter your email first, then tap Forgot password.", "error");
+        $("email").focus();
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        setAuthStatus("If an account exists for that email, a reset link has been sent.", "ok");
+      } catch (error) {
+        setAuthStatus(friendlyError(error), "error");
+      }
+    });
+
+    function initials(email = "") {
+      return (email.trim().charAt(0) || "K").toUpperCase();
+    }
+
+    function stopListening() {
+      if (unsubscribeMessages) unsubscribeMessages();
+      unsubscribeMessages = null;
+    }
+
+    function showChat(user) {
+      currentUser = user;
+      authView.classList.add("hidden");
+      chatView.classList.remove("hidden");
+      $("sideEmail").textContent = user.email || "Your account";
+      $("sideAvatar").textContent = initials(user.email);
+      $("headAvatar").textContent = initials(user.email);
+      $("connectionLabel").textContent = "Connecting to live chat…";
+      subscribeToMessages();
+      messageInput.focus();
+    }
+
+    function showAuth() {
+      stopListening();
+      currentUser = null;
+      chatView.classList.add("hidden");
+      authView.classList.remove("hidden");
+      messagesEl.replaceChildren();
+      messageInput.value = "";
+      sendButton.disabled = true;
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) showChat(user);
+      else showAuth();
+    });
+
+    function subscribeToMessages() {
+      stopListening();
+      const messagesQuery = query(collection(db, "messages"), orderBy("createdAt", "asc"), limit(100));
+      unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
+        $("connectionLabel").textContent = "Live updates on";
+        messagesEl.replaceChildren();
+        if (snapshot.empty) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.innerHTML = '<div class="empty-icon">✦</div>No messages yet. Send the first one.';
+          messagesEl.append(empty);
+          return;
+        }
+        for (const docSnap of snapshot.docs) {
+          const data = docSnap.data();
+          const isMine = data.uid === currentUser?.uid;
+          const wrapper = document.createElement("article");
+          wrapper.className = `message${isMine ? " mine" : ""}`;
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          const who = document.createElement("span");
+          who.textContent = isMine ? "You" : (data.username || "Member");
+          const time = document.createElement("time");
+          if (data.createdAt?.toDate) {
+            const date = data.createdAt.toDate();
+            time.dateTime = date.toISOString();
+            time.textContent = date.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+          } else {
+            time.textContent = "Sending…";
+          }
+          meta.append(who, time);
+          const bubble = document.createElement("div");
+          bubble.className = "bubble";
+          bubble.textContent = typeof data.text === "string" ? data.text : "";
+          wrapper.append(meta, bubble);
+          messagesEl.append(wrapper);
+        }
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }, (error) => {
+        $("connectionLabel").textContent = "Connection error";
+        const warning = document.createElement("div");
+        warning.className = "empty";
+        warning.textContent = friendlyError(error);
+        messagesEl.replaceChildren(warning);
+      });
+    }
+
+    messageInput.addEventListener("input", () => {
+      sendButton.disabled = !messageInput.value.trim() || sending || !currentUser;
+    });
+
+    messageForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const text = messageInput.value.trim();
+      if (!text || !currentUser || sending) return;
+      sending = true;
+      sendButton.disabled = true;
+      messageInput.disabled = true;
+      try {
+        await addDoc(collection(db, "messages"), {
+          uid: currentUser.uid,
+          username: currentUser.email || "Member",
+          text,
+          createdAt: serverTimestamp()
+        });
+        messageInput.value = "";
+      } catch (error) {
+        $("connectionLabel").textContent = "Couldn't send";
+        alert(friendlyError(error));
+      } finally {
+        sending = false;
+        messageInput.disabled = false;
+        sendButton.disabled = !messageInput.value.trim();
+        messageInput.focus();
+      }
+    });
+
+    async function logOut() {
+      try { await signOut(auth); }
+      catch (error) { alert(friendlyError(error)); }
+    }
+    $("signOut").addEventListener("click", logOut);
+    $("mobileSignOut").addEventListener("click", logOut);
+  </script>
+</body>
+</html>
