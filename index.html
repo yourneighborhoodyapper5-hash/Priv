@@ -35,8 +35,12 @@
     .channels{width:240px;background:var(--side);display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
     .server-name{height:56px;flex:0 0 56px;display:flex;align-items:center;padding:0 16px;font-weight:700;border-bottom:1px solid var(--line)}
     .cat{padding:18px 16px 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#9b9d98}
-    .channel{display:flex;align-items:center;gap:8px;margin:1px 8px;padding:7px 8px;border:0;border-radius:4px;background:transparent;color:var(--muted);text-align:left}
+    .channel{display:flex;align-items:center;gap:8px;margin:1px 8px;padding:7px 8px;border:0;border-radius:4px;background:transparent;color:var(--muted);text-align:left;width:calc(100% - 16px)}
     .channel.active{background:#303331;color:var(--ink)}.channel:hover{background:var(--hover);color:var(--ink)}
+    .dm-item{display:flex;align-items:center;gap:8px;margin:1px 8px;padding:5px 8px;border:0;border-radius:4px;background:transparent;color:var(--muted);text-align:left;width:calc(100% - 16px)}
+    .dm-item span.n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+    .dm-item.active{background:#303331;color:var(--ink)}.dm-item:hover{background:var(--hover);color:var(--ink)}
+    .dm-empty{padding:4px 16px;font-size:12px;color:#787a76}
     .userbar{margin-top:auto;padding:10px;background:#171819;display:flex;align-items:center;gap:8px;min-width:0;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
     .who{flex:1;min-width:0;border:0;background:none;display:flex;align-items:center;gap:9px;text-align:left;padding:3px;border-radius:4px}.who:hover{background:var(--hover)}
     .nm{min-width:0}.nm strong{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nm small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
@@ -48,10 +52,6 @@
     .conn{font-size:12px;color:var(--muted);white-space:nowrap}.conn i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#91a995;margin-right:6px}
     .hbtn{border:1px solid #3a3d3b;background:transparent;border-radius:4px;color:var(--muted);padding:6px 10px;font-size:12px}.hbtn:hover{color:var(--ink);background:var(--hover)}
     #navToggle{display:none}
-    /* ---------- DM list ---------- */
-    .dm-item{width:100%;display:flex;align-items:center;gap:10px;padding:6px 8px;margin:1px 8px;width:auto;border:0;border-radius:4px;background:transparent;text-align:left;color:var(--muted)}.dm-item:hover{background:var(--hover);color:var(--ink)}.dm-item.active{background:#303331;color:var(--ink)}.dm-item .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;flex:1;min-width:0}
-    .dm-unread{width:8px;height:8px;border-radius:50%;background:#a6c2ad;flex:0 0 8px}
-    .dm-empty{padding:6px 16px;font-size:12px;color:var(--muted);line-height:1.5}
     /* ---------- Avatars ---------- */
     .avatar{width:40px;height:40px;flex:0 0 40px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:16px;color:#e6ebe7;overflow:hidden;background:#4a5a50;user-select:none}
     .avatar.sm{width:32px;height:32px;flex-basis:32px;font-size:13px}.avatar.lg{width:80px;height:80px;flex-basis:80px;font-size:30px}
@@ -135,9 +135,9 @@
       <aside class="channels">
         <div class="server-name">Kernals</div>
         <div class="cat">Text channels</div>
-        <button class="channel active" type="button" data-conv="general"><span>#</span>&nbsp;general</button>
+        <button id="channelGeneral" class="channel active" type="button"><span>#</span>&nbsp;general</button>
         <div class="cat">Direct messages</div>
-        <div id="dmList"></div>
+        <div id="dmList"><div class="dm-empty">Click a username to start a DM</div></div>
         <div class="userbar">
           <button id="selfBtn" class="who" type="button" aria-label="Your profile">
             <span id="selfAvatar" class="avatar sm">K</span>
@@ -153,7 +153,7 @@
     <section class="conversation">
       <header class="chat-header">
         <button id="navToggle" class="hbtn" type="button" aria-label="Open menu">☰</button>
-        <div class="title"><span>#</span>general</div>
+        <div id="chatTitle" class="title"><span>#</span>general</div>
         <div class="conn"><i></i><span id="connectionLabel">Connecting…</span></div>
       </header>
       <div id="messages" class="messages" aria-live="polite"></div>
@@ -167,7 +167,6 @@
         <div class="hint">Enter to send · Shift+Enter for new line · Paste a Giphy or Tenor URL to embed a GIF</div>
       </div>
     </section>
-
   </div>
   <div id="scrim" class="scrim hidden"></div>
 </main>
@@ -240,11 +239,14 @@
 
   /* ---- State ---- */
   let createMode = false, currentUser = null, sending = false;
-  let unsubMessages = null, unsubUsers = null, unsubConvs = null;
-  let activeConv = "general"; // "general" or a DM conversationId
-  const dmConvIds = new Set();
+  let unsubMessages = null, unsubUsers = null, unsubConvos = null;
   let latestDocs = [], loaded = false, firstRender = true;
+  let view = { type: "channel" }; // or { type:"dm", id, otherUid }
   const profiles = new Map(); // uid → {username, bio, createdAt}
+  const convoMeta = new Map(); // conversationId → otherUid
+
+  /* ---- DM helpers ---- */
+  const dmId = (a, b) => [a, b].sort().join("_");
 
   /* ---- Helpers ---- */
   const PALETTE = ["#4a5a50","#4f5566","#5d5248","#56485a","#4b5b5e","#5a5a48"];
@@ -341,7 +343,7 @@
   function stopListening() {
     if (unsubMessages) { unsubMessages(); unsubMessages = null; }
     if (unsubUsers)    { unsubUsers();    unsubUsers    = null; }
-    if (unsubConvs)    { unsubConvs();    unsubConvs    = null; }
+    if (unsubConvos)   { unsubConvos();   unsubConvos   = null; }
   }
 
   function showChat(user) {
@@ -352,7 +354,7 @@
     refreshSelf();
     subscribeUsers();
     subscribeConversations();
-    openConversation("general");
+    switchToChannel();
     ensureProfile(user);
     if (!matchMedia("(pointer:coarse)").matches) messageInput.focus();
   }
@@ -360,12 +362,13 @@
   function showAuth() {
     stopListening();
     currentUser = null;
-    profiles.clear(); latestDocs = []; loaded = false; firstRender = true;
-    activeConv = "general"; dmConvIds.clear();
+    profiles.clear(); convoMeta.clear(); latestDocs = []; loaded = false; firstRender = true;
+    view = { type: "channel" };
     closePopover(); closeSettings(); closeDrawers();
     chatView.classList.add("hidden");
     authView.classList.remove("hidden");
     messagesEl.replaceChildren();
+    $("dmList").replaceChildren();
     messageInput.value = ""; autosize();
     sendButton.disabled = true;
   }
@@ -377,7 +380,7 @@
   }
   $("signOut").addEventListener("click", logOut);
 
-  /* ======================== PROFILES / MEMBERS ======================== */
+  /* ======================== PROFILES ======================== */
   function refreshSelf() {
     if (!currentUser) return;
     const name = nameOf(currentUser.uid, defaultName(currentUser));
@@ -393,12 +396,88 @@
       (snap) => {
         profiles.clear();
         snap.forEach((d) => profiles.set(d.id, d.data()));
-        refreshSelf(); renderDMList(); renderMessages();
+        refreshSelf(); renderDmList(); renderMessages();
+        if (view.type==="dm") updateChatTitle();
       },
       (e) => console.warn("Profiles unavailable:", e)
     );
   }
 
+  /* ======================== DIRECT MESSAGES ======================== */
+  function subscribeConversations() {
+    const q = query(collection(db, "conversations"), where("participants", "array-contains", currentUser.uid));
+    unsubConvos = onSnapshot(q, (snap) => {
+      convoMeta.clear();
+      snap.forEach((d) => {
+        const parts = d.data().participants || [];
+        const other = parts.find((u) => u !== currentUser.uid) || parts[0];
+        convoMeta.set(d.id, other);
+      });
+      renderDmList();
+    }, (e) => console.warn("Conversations unavailable:", e));
+  }
+
+  function renderDmList() {
+    const list = $("dmList");
+    if (!convoMeta.size) { list.replaceChildren(Object.assign(document.createElement("div"), {className:"dm-empty", textContent:"Click a username to start a DM"})); return; }
+    const items = [...convoMeta.entries()].sort((a,b) =>
+      nameOf(a[1]).localeCompare(nameOf(b[1]), undefined, {sensitivity:"base"})
+    );
+    list.replaceChildren(...items.map(([cid, otherUid]) => {
+      const name = nameOf(otherUid);
+      const b = document.createElement("button");
+      b.type="button"; b.className = "dm-item" + (view.type==="dm" && view.id===cid ? " active" : "");
+      b.dataset.cid = cid; b.dataset.otherUid = otherUid;
+      const n = document.createElement("span"); n.className="n"; n.textContent=name;
+      b.append(avatarEl(otherUid, name, "sm"), n);
+      b.addEventListener("click", () => switchToDM(otherUid, cid));
+      return b;
+    }));
+  }
+
+  async function startDM(otherUid) {
+    if (!currentUser || otherUid===currentUser.uid) return;
+    const cid = dmId(currentUser.uid, otherUid);
+    try {
+      const ref = doc(db, "conversations", cid);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        const participants = [currentUser.uid, otherUid].sort();
+        await setDoc(ref, { participants, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      }
+      switchToDM(otherUid, cid);
+    } catch(err) { alert(friendlyError(err)); }
+  }
+
+  function updateChatTitle() {
+    const title = $("chatTitle");
+    if (view.type==="channel") { title.innerHTML = '<span>#</span>general'; return; }
+    const name = nameOf(view.otherUid);
+    title.replaceChildren(avatarEl(view.otherUid, name, "sm"), document.createTextNode(" "+name));
+    title.style.display = "flex"; title.style.alignItems = "center"; title.style.gap = "8px";
+  }
+
+  function switchToChannel() {
+    view = { type: "channel" };
+    $("channelGeneral").classList.add("active");
+    latestDocs = []; loaded = false; firstRender = true;
+    updateChatTitle(); renderDmList();
+    messageInput.placeholder = "Message #general — paste a Giphy/Tenor link to embed a GIF";
+    subscribeMessages();
+    closeDrawers();
+  }
+
+  function switchToDM(otherUid, cid) {
+    view = { type: "dm", id: cid, otherUid };
+    $("channelGeneral").classList.remove("active");
+    latestDocs = []; loaded = false; firstRender = true;
+    updateChatTitle(); renderDmList();
+    messageInput.placeholder = `Message ${nameOf(otherUid)}`;
+    subscribeMessages();
+    closeDrawers();
+  }
+
+  $("channelGeneral").addEventListener("click", switchToChannel);
 
   /* ======================== MESSAGES ======================== */
   const URL_RE   = /https?:\/\/[^\s<>"']+/g;
@@ -531,14 +610,16 @@
     firstRender = false;
   }
 
+  function msgCollection() {
+    return view.type==="dm"
+      ? collection(db, "conversations", view.id, "messages")
+      : collection(db, "messages");
+  }
+
   function subscribeMessages() {
     if (unsubMessages) unsubMessages();
-    let q;
-    if (activeConv === "general") {
-      q = query(collection(db, "messages"), orderBy("createdAt","desc"), limit(100));
-    } else {
-      q = query(collection(db, "conversations", activeConv, "messages"), orderBy("createdAt","desc"), limit(100));
-    }
+    // Fetch newest 100 descending, then reverse for chronological display
+    const q = query(msgCollection(), orderBy("createdAt","desc"), limit(100));
     unsubMessages = onSnapshot(q, (snap) => {
       $("connectionLabel").textContent = "Live updates on";
       latestDocs = snap.docs.slice().reverse();
@@ -573,13 +654,12 @@
     if (!text || !currentUser || sending) return;
     sending = true; sendButton.disabled = true; messageInput.disabled = true;
     try {
-      const username = profiles.get(currentUser.uid)?.username || defaultName(currentUser);
-      const col = activeConv === "general"
-        ? collection(db, "messages")
-        : collection(db, "conversations", activeConv, "messages");
-      await addDoc(col, {
-        uid: currentUser.uid, username, text, createdAt: serverTimestamp()
-      });
+      if (view.type==="dm") {
+        await addDoc(msgCollection(), { uid: currentUser.uid, text, createdAt: serverTimestamp() });
+      } else {
+        const username = profiles.get(currentUser.uid)?.username || defaultName(currentUser);
+        await addDoc(msgCollection(), { uid: currentUser.uid, username, text, createdAt: serverTimestamp() });
+      }
       messageInput.value = ""; autosize();
     } catch(err) {
       $("connectionLabel").textContent = "Couldn't send";
@@ -587,117 +667,6 @@
     } finally {
       sending = false; messageInput.disabled = false; updateSend();
       if (!matchMedia("(pointer:coarse)").matches) messageInput.focus();
-    }
-  });
-
-
-  /* ======================== DIRECT MESSAGES ======================== */
-  function dmIdFor(a, b) {
-    return [a, b].sort().join("_");
-  }
-
-  function subscribeConversations() {
-    if (!currentUser) return;
-    if (unsubConvs) unsubConvs();
-    // Listen to all conversation docs where I'm a participant.
-    // With rules in place, non-participant docs are unreadable; we query by participant field.
-    const q = query(
-      collection(db, "conversations"),
-      where("participants", "array-contains", currentUser.uid),
-      limit(100)
-    );
-    unsubConvs = onSnapshot(q, (snap) => {
-      dmConvIds.clear();
-      snap.forEach((d) => dmConvIds.add(d.id));
-      renderDMList();
-    }, (e) => console.warn("Conversations unavailable:", e));
-  }
-
-  function renderDMList() {
-    const listEl = $("dmList");
-    if (!currentUser) { listEl.replaceChildren(); return; }
-    const frag = document.createDocumentFragment();
-
-    // Existing conversations (partner = the other participant)
-    const convs = [...dmConvIds].sort();
-    if (!convs.length) {
-      const d = document.createElement("div");
-      d.className = "dm-empty";
-      d.textContent = "No conversations yet. Open someone's profile to start one.";
-      frag.append(d);
-    }
-    for (const cid of convs) {
-      const partner = cid.split("_").find((u) => u !== currentUser.uid);
-      if (!partner) continue;
-      const p = profiles.get(partner) || {};
-      const name = p.username || "Member";
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "dm-item" + (activeConv === cid ? " active" : "");
-      b.dataset.conv = cid;
-      const n = document.createElement("span");
-      n.className = "n"; n.textContent = name;
-      b.append(avatarEl(partner, name, "sm"), n);
-      frag.append(b);
-    }
-    listEl.replaceChildren(frag);
-
-    // Highlight active general channel
-    document.querySelectorAll(".channel[data-conv]").forEach((ch) => {
-      ch.classList.toggle("active", ch.dataset.conv === activeConv);
-    });
-  }
-
-  async function startDM(otherUid) {
-    if (!currentUser || otherUid === currentUser.uid) return;
-    const cid = dmIdFor(currentUser.uid, otherUid);
-    try {
-      const ref = doc(db, "conversations", cid);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) {
-        await setDoc(ref, {
-          participants: [currentUser.uid, otherUid].sort(),
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-      }
-      openConversation(cid);
-    } catch (e) {
-      alert(friendlyError(e));
-    }
-  }
-
-  function openConversation(convId) {
-    activeConv = convId;
-    loaded = false; firstRender = true;
-    latestDocs = [];
-    renderDMList();
-
-    // Update header title
-    const titleEl = document.querySelector(".chat-header .title");
-    if (convId === "general") {
-      titleEl.innerHTML = "<span>#</span>general";
-      messageInput.placeholder = "Message #general — paste a Giphy/Tenor link to embed a GIF";
-    } else {
-      const partner = convId.split("_").find((u) => u !== currentUser.uid);
-      const p = profiles.get(partner) || {};
-      const name = p.username || "Member";
-      titleEl.innerHTML = "";
-      const av = avatarEl(partner, name, "sm");
-      av.style.width = "24px"; av.style.height = "24px"; av.style.flexBasis = "24px";
-      av.style.fontSize = "12px";
-      titleEl.append(av, document.createTextNode(" " + name));
-      messageInput.placeholder = "Message " + name;
-    }
-    subscribeMessages();
-    closeDrawers();
-  }
-
-  // Channel + DM list click delegation
-  document.addEventListener("click", (e) => {
-    const item = e.target.closest("[data-conv]");
-    if (item && !e.target.closest("#settingsModal") && !e.target.closest("#popover")) {
-      openConversation(item.dataset.conv);
     }
   });
 
@@ -732,7 +701,7 @@
       btn.textContent="Edit profile";
       btn.addEventListener("click", () => { closePopover(); openSettings(); });
       body.append(btn);
-    } else if (currentUser && uid!==currentUser.uid) {
+    } else if (currentUser) {
       const btn = document.createElement("button");
       btn.type="button"; btn.className="primary sm"; btn.style.marginTop="12px";
       btn.textContent="Message";
@@ -764,8 +733,6 @@
   /* ======================== SETTINGS ======================== */
   function openSettings() {
     if (!currentUser) return;
-    // Ownership is enforced by Firestore rules; this is only a UX guard.
-    $("settingsTitle").textContent = "Profile settings";
     const p = profiles.get(currentUser.uid) || {};
     $("usernameInput").value = p.username || defaultName(currentUser);
     $("bioInput").value = p.bio || "";
@@ -822,7 +789,7 @@
     layout.classList.add(cls);
     $("scrim").classList.remove("hidden");
   }
-  $("navToggle").addEventListener("click",     () => openDrawer("nav-open"));
+  $("navToggle").addEventListener("click", () => openDrawer("nav-open"));
   $("scrim").addEventListener("click", closeDrawers);
 
   document.addEventListener("keydown", (e) => {
@@ -832,7 +799,8 @@
   });
   addEventListener("resize", () => {
     closePopover();
-    if (innerWidth>1100) closeDrawers();
+    if (innerWidth>800) closeDrawers();
   });
 </script>
 </body>
+</html>
