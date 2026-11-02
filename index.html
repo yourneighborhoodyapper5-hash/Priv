@@ -637,28 +637,62 @@
     }
   });
 
-  messageForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const text = messageInput.value.trim();
-    if (!text || !currentUser || sending) return;
-    sending = true; sendButton.disabled = true; messageInput.disabled = true;
-    try {
-      const username = profiles.get(currentUser.uid)?.username || defaultName(currentUser);
-      const col = activeConv === "general"
+messageForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const text = messageInput.value.trim();
+
+  if (!text || !currentUser || sending) return;
+
+  sending = true;
+  messageInput.disabled = true;
+  updateSend();
+
+  try {
+    const username =
+      profiles.get(currentUser.uid)?.username ||
+      defaultName(currentUser);
+
+    const messagesCollection =
+      activeConv === "general"
         ? collection(db, "messages")
-        : collection(db, "conversations", activeConv, "messages");
-      await addDoc(col, {
-        uid: currentUser.uid, username, text, createdAt: serverTimestamp()
-      });
-      messageInput.value = ""; autosize();
-    } catch(err) {
-      $("connectionLabel").textContent = "Couldn't send";
-      alert(friendlyError(err));
-    } finally {
-      sending = false; messageInput.disabled = false; updateSend();
-      if (!matchMedia("(pointer:coarse)").matches) messageInput.focus();
+        : collection(
+            db,
+            "conversations",
+            activeConv,
+            "messages"
+          );
+
+    await addDoc(messagesCollection, {
+      uid: currentUser.uid,
+      username,
+      text,
+
+      // Used for instant and reliable ordering
+      createdAtMs: Date.now(),
+
+      // Used as the trusted Firebase time
+      createdAt: serverTimestamp()
+    });
+
+    messageInput.value = "";
+    autosize();
+
+  } catch (err) {
+    $("connectionLabel").textContent = "Couldn't send";
+    alert(friendlyError(err));
+
+  } finally {
+    sending = false;
+    messageInput.disabled = false;
+    updateSend();
+
+    if (!matchMedia("(pointer: coarse)").matches) {
+      messageInput.focus();
     }
-  });
+  }
+});
+
 
 
   /* ======================== DIRECT MESSAGES ======================== */
