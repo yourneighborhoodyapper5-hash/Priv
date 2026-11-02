@@ -532,7 +532,11 @@
 
     for (const snap of latestDocs) {
       const data = snap.data();
-      const date = data.createdAt?.toDate ? data.createdAt.toDate() : null;
+      const date = data.createdAt?.toDate
+  ? data.createdAt.toDate()
+  : data.createdAtMs
+    ? new Date(data.createdAtMs)
+    : null;
       const grouped = prev && prev.uid===data.uid && date && prev.date
         && (date-prev.date) < 5*60e3
         && date.toDateString()===prev.date.toDateString();
