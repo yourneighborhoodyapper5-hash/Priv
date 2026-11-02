@@ -601,25 +601,68 @@
     firstRender = false;
   }
 
-  function subscribeMessages() {
-    if (unsubMessages) unsubMessages();
-    let q;
-    if (activeConv === "general") {
-      q = query(collection(db, "messages"), orderBy("createdAt","desc"), limit(100));
-    } else {
-      q = query(collection(db, "conversations", activeConv, "messages"), orderBy("createdAt","desc"), limit(100));
-    }
-    unsubMessages = onSnapshot(q, (snap) => {
-      $("connectionLabel").textContent = "Live updates on";
-      latestDocs = snap.docs.slice().reverse();
-      loaded = true;
-      renderMessages();
-    }, (err) => {
-      $("connectionLabel").textContent = "Connection error";
-      const w = document.createElement("div"); w.className="empty"; w.textContent=friendlyError(err);
-      messagesEl.replaceChildren(w);
-    });
+function subscribeMessages() {
+  if (unsubMessages) {
+    unsubMessages();
+    unsubMessages = null;
   }
+
+  loaded = false;
+  firstRender = true;
+  latestDocs = [];
+  messagesEl.replaceChildren();
+
+  let messagesQuery;
+
+  if (activeConv === "general") {
+    messagesQuery = query(
+      collection(db, "messages"),
+      orderBy("createdAtMs", "desc"),
+      limit(100)
+    );
+  } else {
+    messagesQuery = query(
+      collection(
+        db,
+        "conversations",
+        activeConv,
+        "messages"
+      ),
+      orderBy("createdAtMs", "desc"),
+      limit(100)
+    );
+  }
+
+  unsubMessages = onSnapshot(
+    messagesQuery,
+    {
+      includeMetadataChanges: true
+    },
+    (snapshot) => {
+      $("connectionLabel").textContent =
+        snapshot.metadata.fromCache
+          ? "Offline"
+          : "Live updates on";
+
+      latestDocs = snapshot.docs.slice().reverse();
+      loaded = true;
+
+      renderMessages();
+    },
+    (error) => {
+      console.error("Message listener error:", error);
+
+      $("connectionLabel").textContent = "Connection error";
+
+      const errorMessage = document.createElement("div");
+      errorMessage.className = "empty";
+      errorMessage.textContent = friendlyError(error);
+
+      messagesEl.replaceChildren(errorMessage);
+    }
+  );
+}
+
 
   /* ======================== COMPOSER ======================== */
   function updateSend() {
