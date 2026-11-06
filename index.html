@@ -1,1126 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#141516" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#141516">
   <title>Kernals - Chat</title>
   <style>
-    :root {
-      color-scheme: dark;
-      --rail: #141516;
-      --side: #1b1c1d;
-      --bg: #202223;
-      --ink: #e4e4e1;
-      --muted: #a0a19c;
-      --line: #2e3031;
-      --hover: #2a2c2d;
-      --accent: #56645b;
-      --accent-hover: #65746a;
-      --danger: #e28c86;
-      --field: #191b1a;
-      --success: #a6c2ad;
-      --shadow: rgba(0, 0, 0, 0.35);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html, body {
-      margin: 0;
-      height: 100%;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: Arial, Helvetica, sans-serif;
-      -webkit-text-size-adjust: 100%;
-    }
-
-    body {
-      min-height: 100vh;
-    }
-
-    button, input, textarea {
-      font: inherit;
-      color: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .shell {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 22px;
-      background: var(--bg);
-    }
-
-    .auth-card {
-      width: min(420px, 100%);
-      background: var(--bg);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 28px;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-    }
-
-    .logo {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      background: #3b4540;
-      color: #edf3ee;
-      font-weight: 700;
-    }
-
-    .sub {
-      margin: 12px 0 20px;
-      color: var(--muted);
-      line-height: 1.5;
-      font-size: 14px;
-    }
-
-    .field {
-      display: grid;
-      gap: 7px;
-      margin: 14px 0;
-    }
-
-    .field label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #c8c9c5;
-    }
-
-    .field input {
-      width: 100%;
-      border: 1px solid #414442;
-      background: var(--field);
-      color: var(--ink);
-      border-radius: 4px;
-      padding: 12px 13px;
-      font-size: 16px;
-      outline: none;
-    }
-
-    .field input:focus {
-      border-color: #89978e;
-    }
-
-    .primary, .secondary, .text-btn, .hbtn, .ibtn, .ub-btn, .who {
-      transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease, transform 0.14s ease;
-    }
-
-    .primary, .secondary {
-      border: 1px solid transparent;
-      border-radius: 4px;
-      padding: 10px 14px;
-      font-weight: 600;
-    }
-
-    .primary {
-      background: var(--accent);
-      color: #fff;
-    }
-
-    .primary:hover:not(:disabled) {
-      background: var(--accent-hover);
-    }
-
-    .secondary {
-      background: #303331;
-      border-color: #414442;
-      color: #e0e1dd;
-    }
-
-    .secondary:hover {
-      background: #383b39;
-    }
-
-    .primary:disabled, .secondary:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .auth-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .text-btn {
-      background: none;
-      border: 0;
-      color: #b6c2b9;
-      font-weight: 500;
-      font-size: 12px;
-      padding: 7px 0;
-    }
-
-    .text-btn:hover {
-      color: #e1e6e2;
-    }
-
-    .status {
-      min-height: 22px;
-      margin-top: 12px;
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.45;
-    }
-
-    .status.error {
-      color: var(--danger);
-    }
-
-    .status.ok {
-      color: var(--success);
-    }
-
-    .app {
-      height: 100vh;
-      width: 100%;
-      background: var(--bg);
-    }
-
-    .layout {
-      height: 100vh;
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      overflow: hidden;
-    }
-
-    .nav {
-      display: flex;
-      min-height: 0;
-    }
-
-    .rail {
-      width: 72px;
-      background: var(--rail);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 0;
-      border-right: 1px solid rgba(255, 255, 255, 0.04);
-    }
-
-    .server {
-      width: 46px;
-      height: 46px;
-      border: 0;
-      border-radius: 8px;
-      background: #3b4540;
-      color: #edf3ee;
-      font-weight: 700;
-      font-size: 18px;
-      position: relative;
-    }
-
-    .server.active::before {
-      content: "";
-      position: absolute;
-      left: -13px;
-      top: 11px;
-      width: 4px;
-      height: 24px;
-      border-radius: 0 2px 2px 0;
-      background: #d8ddd9;
-    }
-
-    .channels {
-      width: 240px;
-      background: var(--side);
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      border-right: 1px solid var(--line);
-    }
-
-    .server-name {
-      height: 56px;
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      font-weight: 700;
-      border-bottom: 1px solid var(--line);
-      flex: 0 0 56px;
-    }
-
-    .cat {
-      padding: 18px 16px 6px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: #9b9d98;
-    }
-
-    .channel, .dm-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 1px 8px;
-      padding: 7px 8px;
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      border-radius: 4px;
-      text-align: left;
-      width: auto;
-    }
-
-    .channel.active, .dm-item.active {
-      background: #303331;
-      color: var(--ink);
-    }
-
-    .channel:hover, .dm-item:hover {
-      background: var(--hover);
-      color: var(--ink);
-    }
-
-    .dm-item {
-      gap: 10px;
-    }
-
-    .dm-item.n {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 14px;
-    }
-
-    .dm-unread {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      flex: 0 0 8px;
-    }
-
-    .userbar {
-      margin-top: auto;
-      padding: 10px;
-      background: #171819;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 0;
-      padding-bottom: calc(10px + env(safe-area-inset-bottom));
-    }
-
-    .who {
-      flex: 1;
-      min-width: 0;
-      border: 0;
-      background: none;
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      text-align: left;
-      padding: 3px;
-      border-radius: 4px;
-    }
-
-    .who:hover {
-      background: var(--hover);
-    }
-
-    .nm {
-      min-width: 0;
-    }
-
-    .nm strong {
-      display: block;
-      font-size: 13px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .nm small {
-      display: block;
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .ub-btn {
-      border: 0;
-      background: transparent;
-      color: var(--muted);
-      font-size: 12px;
-      padding: 8px 6px;
-      border-radius: 4px;
-    }
-
-    .ub-btn:hover {
-      color: var(--ink);
-      background: var(--hover);
-    }
-
-    .conversation {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-      min-height: 0;
-      background: var(--bg);
-    }
-
-    .chat-header {
-      height: 56px;
-      flex: 0 0 56px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0 16px;
-      padding-top: env(safe-area-inset-top);
-    }
-
-    .chat-header.title {
-      flex: 1;
-      min-width: 0;
-      font-size: 15px;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .chat-header.title span {
-      color: var(--muted);
-      font-weight: 400;
-      margin-right: 6px;
-    }
-
-    .conn {
-      font-size: 12px;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .conn i {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #9ad2a8;
-      margin-right: 6px;
-    }
-
-    .hbtn {
-      border: 1px solid var(--line);
-      background: transparent;
-      border-radius: 4px;
-      color: var(--muted);
-      padding: 6px 10px;
-      font-size: 12px;
-    }
-
-    .hbtn:hover {
-      color: var(--ink);
-      background: var(--hover);
-    }
-
-    #navToggle {
-      display: none;
-    }
-
-    .messages {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      padding: 16px 0 8px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .empty {
-      margin: auto;
-      max-width: 300px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
-      padding: 20px;
-    }
-
-    .msg {
-      display: grid;
-      grid-template-columns: 40px minmax(0, 1fr);
-      column-gap: 16px;
-      padding: 2px 16px;
-      transition: background 0.12s ease-out;
-    }
-
-    .msg.first {
-      margin-top: 14px;
-    }
-
-    .msg:hover {
-      background: rgba(255, 255, 255, 0.03);
-    }
-
-    .av-col {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding-top: 2px;
-    }
-
-    .avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      font-weight: 700;
-      font-size: 16px;
-      background: #4a5a50;
-      color: #e6ebe7;
-      overflow: hidden;
-      user-select: none;
-      position: relative;
-      flex: 0 0 40px;
-    }
-
-    .avatar.sm {
-      width: 32px;
-      height: 32px;
-      flex-basis: 32px;
-      font-size: 13px;
-    }
-
-    .mhead {
-      display: flex;
-      min-width: 0;
-      align-items: baseline;
-      gap: 8px;
-    }
-
-    .mname {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--ink);
-      max-width: 60%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      cursor: pointer;
-      background: none;
-      border: 0;
-      padding: 0;
-    }
-
-    .mname:hover {
-      text-decoration: underline;
-    }
-
-    .mtime {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .mtext {
-      color: var(--ink);
-      font-size: 15px;
-      line-height: 1.45;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-
-    .composer-wrap {
-      padding: 0 16px calc(16px + env(safe-area-inset-bottom));
-    }
-
-    .composer {
-      display: flex;
-      align-items: flex-end;
-      gap: 4px;
-      background: var(--bg);
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 4px;
-    }
-
-    .composer textarea {
-      flex: 1;
-      min-width: 0;
-      border: 0;
-      outline: none;
-      resize: none;
-      background: transparent;
-      padding: 10px 6px;
-      font-size: 16px;
-      line-height: 1.35;
-      max-height: 140px;
-      height: 40px;
-    }
-
-    .ibtn {
-      width: 40px;
-      height: 40px;
-      flex: 0 0 40px;
-      border: 0;
-      border-radius: 4px;
-      background: transparent;
-      color: var(--muted);
-      font-size: 20px;
-      display: grid;
-      place-items: center;
-    }
-
-    .ibtn:hover:not(:disabled) {
-      background: var(--hover);
-      color: var(--ink);
-    }
-
-    .ibtn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .send {
-      background: var(--accent);
-      color: #fff;
-      font-size: 16px;
-    }
-
-    .send:hover:not(:disabled) {
-      background: var(--accent-hover);
-      color: #fff;
-    }
-
-    .hint {
-      font-size: 11px;
-      color: var(--muted);
-      margin: 6px 3px 0;
-    }
-
-    @media (max-width: 800px) {
-      .layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      .nav {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        z-index: 40;
-        transform: translateX(-100%);
-        transition: transform 0.18s ease;
-      }
-
-      .layout.nav-open .nav {
-        transform: none;
-      }
-
-      #navToggle {
-        display: inline-block;
-      }
-
-      .conn {
-        display: none;
-      }
-
-      .msg {
-        column-gap: 12px;
-        padding: 2px 12px;
-      }
-
-      .composer-wrap {
-        padding: 0 10px calc(10px + env(safe-area-inset-bottom));
-      }
-
-      .hint {
-        display: none;
-      }
-
-      .auth-card {
-        padding: 24px 20px;
-      }
-
-      .shell {
-        padding: 14px;
-      }
-    }
+    :root{color-scheme:dark;--rail:#141516;--side:#1b1c1d;--bg:#202223;--ink:#e4e4e1;--muted:#a0a19c;--line:#2e3031;--hover:#2a2c2d;--accent:#56645b;--accent-hover:#65746a;--danger:#e28c86;--field:#191b1a;--success:#a6c2ad}
+    *{box-sizing:border-box}html,body{height:100%;margin:0}body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);-webkit-text-size-adjust:100%}button,input,textarea{font:inherit;color:inherit}button{cursor:pointer}.hidden{display:none!important}
+    .shell{min-height:100%;display:grid;place-items:center;padding:22px}.auth-card{width:min(400px,100%);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:28px}.brand{display:flex;align-items:center;gap:11px;font-weight:700;font-size:21px;letter-spacing:-.4px}.logo{width:34px;height:34px;border-radius:6px;background:#3b4540;display:grid;place-items:center;color:#e9eee9;font-weight:700}.sub{color:var(--muted);line-height:1.5;font-size:14px;margin:12px 0 24px}.field{display:grid;gap:7px;margin:14px 0}.field label{font-size:13px;font-weight:600;color:#c8c9c5}.field input{width:100%;border:1px solid #414442;background:var(--field);color:var(--ink);border-radius:4px;padding:12px 13px;outline:none;font-size:16px}.field input:focus{border-color:#89978e}.primary,.secondary{border:1px solid transparent;border-radius:4px;padding:10px 14px;font-weight:600}.primary{background:var(--accent);color:#fff}.primary:hover:not(:disabled){background:var(--accent-hover)}.secondary{background:#303331;border-color:#414442;color:#e0e1dd}.secondary:hover{background:#383b39}.primary:disabled{opacity:.5;cursor:not-allowed}.sm{padding:7px 10px;font-size:13px}.auth-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px}.status{min-height:20px;margin-top:12px;font-size:13px;color:var(--muted);line-height:1.45}.status.error{color:var(--danger)}.status.ok{color:var(--success)}
+    .app{height:100dvh}.layout{height:100dvh;display:grid;grid-template-columns:auto minmax(0,1fr);overflow:hidden}.nav{display:flex;min-height:0}.rail{width:72px;background:var(--rail);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:8px}.server{width:46px;height:46px;border:0;border-radius:8px;background:#3b4540;color:#e9eee9;font-weight:700;font-size:18px;position:relative}.server.active:before{content:"";position:absolute;left:-13px;top:11px;width:4px;height:24px;border-radius:0 2px 2px 0;background:#d8ddd9}.channels{width:240px;background:var(--side);display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}.server-name{height:56px;flex:0 0 56px;display:flex;align-items:center;padding:0 16px;font-weight:700;border-bottom:1px solid var(--line)}.cat{padding:18px 16px 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#9b9d98}.channel{display:flex;align-items:center;gap:8px;margin:1px 8px;padding:7px 8px;border:0;border-radius:4px;background:transparent;color:var(--muted);text-align:left;width:auto}.channel.active,.channel:hover{background:#303331;color:var(--ink)}.userbar{margin-top:auto;padding:10px;background:#171819;display:flex;align-items:center;gap:8px;min-width:0;padding-bottom:calc(10px + env(safe-area-inset-bottom))}.who{flex:1;min-width:0;border:0;background:none;display:flex;align-items:center;gap:9px;text-align:left;padding:3px;border-radius:4px}.who:hover,.ub-btn:hover{background:var(--hover)}.avatar{width:32px;height:32px;flex:0 0 32px;border-radius:50%;display:grid;place-items:center;background:#4a5a50;color:#e6ebe7;font-weight:700}.nm{min-width:0}.nm strong{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nm small{display:block;font-size:11px;color:var(--muted);margin-top:2px}.ub-btn{border:0;background:transparent;color:var(--muted);font-size:12px;padding:8px 6px;border-radius:4px}
+    .conversation{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}.chat-header{height:56px;flex:0 0 56px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 16px;gap:12px;padding-top:env(safe-area-inset-top)}.title{font-weight:700;font-size:15px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.title span{color:var(--muted);font-weight:400;margin-right:6px}.conn{font-size:12px;color:var(--muted);white-space:nowrap}.conn i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#91c99d;margin-right:6px}.hbtn{border:1px solid var(--line);background:transparent;border-radius:4px;color:var(--muted);padding:6px 10px;font-size:12px}.hbtn:hover{color:var(--ink);background:var(--hover)}#navToggle{display:none}.messages{flex:1;min-height:0;overflow-y:auto;padding:16px 0 8px;display:flex;flex-direction:column}.empty{margin:auto;text-align:center;max-width:280px;color:var(--muted);font-size:13px;line-height:1.6;padding:20px}.msg{display:grid;grid-template-columns:40px minmax(0,1fr);column-gap:16px;padding:4px 16px}.msg.first{margin-top:14px}.msg:hover{background:#ffffff08}.av-col{display:flex;justify-content:center;align-items:flex-start;padding-top:2px}.msg .avatar{width:40px;height:40px;flex-basis:40px}.mhead{display:flex;align-items:baseline;gap:8px;min-width:0}.mname{border:0;background:none;padding:0;font-weight:700;font-size:15px;color:var(--ink);max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mtime{font-size:11px;color:var(--muted)}.mtext{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.4;font-size:15px;color:var(--ink)}.composer-wrap{padding:0 16px calc(16px + env(safe-area-inset-bottom))}.composer{display:flex;align-items:flex-end;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:4px}.composer textarea{flex:1;min-width:0;border:0;outline:none;background:transparent;resize:none;padding:10px 6px;font-size:16px;line-height:1.35;max-height:140px;height:40px}.ibtn{width:40px;height:40px;flex:0 0 40px;border:0;border-radius:4px;background:transparent;color:var(--muted);font-size:20px;display:grid;place-items:center}.ibtn:hover:not(:disabled){background:var(--hover);color:var(--ink)}.ibtn:disabled{opacity:.4;cursor:not-allowed}.send{background:var(--accent);color:#fff;font-size:16px}.hint{font-size:11px;color:var(--muted);margin:6px 3px 0}
+    @media(max-width:800px){.layout{grid-template-columns:minmax(0,1fr)}.nav{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%);transition:transform .18s}.layout.nav-open .nav{transform:none}#navToggle{display:inline-block}.conn{display:none}.msg{column-gap:12px;padding:4px 12px}.composer-wrap{padding:0 10px calc(10px + env(safe-area-inset-bottom))}.hint{display:none}.auth-card{padding:24px 20px}.shell{padding:14px}}
   </style>
 </head>
 <body>
-  <div id="authScreen" class="shell">
-    <div class="auth-card">
-      <div class="brand">
-        <div class="logo">K</div>
-        <div>Kernals</div>
+  <div id="authScreen" class="shell"><div class="auth-card">
+    <div class="brand"><div class="logo">K</div><div>Kernals</div></div>
+    <p class="sub">Enter a display name to join the chat.</p>
+    <form id="authForm"><div class="field"><label for="nameInput">Display name</label><input id="nameInput" type="text" maxlength="24" autocomplete="nickname" placeholder="Your name" required></div>
+      <div class="auth-actions"><button class="secondary sm" type="button" id="guestBtn">Use guest</button><button class="primary" type="submit">Enter</button></div>
+    </form><div id="authStatus" class="status" aria-live="polite"></div>
+  </div></div>
+  <div id="appScreen" class="app hidden"><div class="layout" id="layoutRoot">
+    <aside class="nav" aria-label="Workspace navigation"><div class="rail"><button class="server active" type="button" title="Northside">N</button></div>
+      <div class="channels"><div class="server-name">Northside</div><div class="cat">Text Channels</div><div id="channelList"></div>
+        <div class="userbar"><button class="who" type="button"><div class="avatar" id="profileAvatar">G</div><div class="nm"><strong id="profileName">Guest</strong><small>online</small></div></button><button class="ub-btn" type="button" id="logoutBtn">Logout</button></div>
       </div>
-      <p class="sub">Sign in to your workspace and start chatting with your community.</p>
+    </aside>
+    <main class="conversation"><header class="chat-header"><button class="hbtn" id="navToggle" type="button" aria-label="Toggle navigation">☰</button><div class="title"><span>#</span><span id="currentChannelLabel">general</span></div><div class="conn" id="connectionStatus"><i></i>Connecting</div><button class="hbtn" type="button" id="newChannelBtn">+ New</button></header>
+      <section id="messages" class="messages" aria-live="polite"></section>
+      <div class="composer-wrap"><div class="composer"><textarea id="composer" rows="1" maxlength="2000" placeholder="Message #general"></textarea><button class="ibtn send" id="sendBtn" type="button" aria-label="Send message">➤</button></div><div class="hint">Press Enter to send · Shift + Enter for a new line</div></div>
+    </main>
+  </div></div>
 
-      <form id="authForm">
-        <div class="field">
-          <label for="nameInput">Display name</label>
-          <input id="nameInput" type="text" maxlength="24" autocomplete="off" placeholder="Your name" />
-        </div>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js';
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js';
 
-        <div class="auth-actions">
-          <button class="secondary sm" type="button" id="guestBtn">Use guest</button>
-          <button class="primary" type="submit">Enter</button>
-        </div>
-      </form>
+    const firebaseConfig = {
+      apiKey: 'AIzaSyC8QLXhKJaRHdi_BpC-Sm-A8uc7uhOAQwY',
+      authDomain: 'privatechat-b39d3.firebaseapp.com',
+      projectId: 'privatechat-b39d3',
+      storageBucket: 'privatechat-b39d3.firebasestorage.app',
+      messagingSenderId: '1031388982221',
+      appId: '1:1031388982221:web:2807b429e387eff320f284',
+      measurementId: 'G-VFFT75E2GN'
+    };
 
-      <div id="authStatus" class="status" aria-live="polite"></div>
-    </div>
-  </div>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const channels = ['general', 'announcements', 'help'];
+    let currentChannel = 'general';
+    let displayName = localStorage.getItem('kernals-display-name') || 'Guest';
+    let stopListening = null;
+    let sending = false;
 
-  <div id="appScreen" class="app hidden" aria-live="polite">
-    <div class="layout" id="layoutRoot">
-      <aside class="nav" aria-label="Workspace navigation">
-        <div class="rail" id="serverRail"></div>
-        <div class="channels">
-          <div class="server-name" id="serverName">Workspace</div>
+    const $ = (id) => document.getElementById(id);
+    const authScreen = $('authScreen');
+    const appScreen = $('appScreen');
+    const authForm = $('authForm');
+    const nameInput = $('nameInput');
+    const authStatus = $('authStatus');
+    const channelList = $('channelList');
+    const messagesEl = $('messages');
+    const composer = $('composer');
+    const sendBtn = $('sendBtn');
+    const connectionStatus = $('connectionStatus');
+    const layoutRoot = $('layoutRoot');
 
-          <div class="cat">Text Channels</div>
-          <div id="channelList"></div>
+    function setStatus(message, kind = '') {
+      authStatus.textContent = message;
+      authStatus.className = 'status' + (kind ? ' ' + kind : '');
+    }
 
-          <div class="cat">Direct Messages</div>
-          <div id="dmList"></div>
+    function setConnection(message, connected = false) {
+      connectionStatus.innerHTML = '';
+      const dot = document.createElement('i');
+      dot.style.background = connected ? '#91c99d' : '#e28c86';
+      connectionStatus.append(dot, document.createTextNode(message));
+    }
 
-          <div class="userbar">
-            <button class="who" type="button" id="profileButton" aria-label="Open profile">
-              <div class="avatar sm" id="profileAvatar">U</div>
-              <div class="nm">
-                <strong id="profileName">User</strong>
-                <small>online</small>
-              </div>
-            </button>
-            <button class="ub-btn" type="button" id="logoutBtn">Logout</button>
-          </div>
-        </div>
-      </aside>
+    function renderChannels() {
+      channelList.innerHTML = '';
+      channels.forEach((name) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'channel' + (name === currentChannel ? ' active' : '');
+        button.textContent = '# ' + name;
+        button.addEventListener('click', () => selectChannel(name));
+        channelList.appendChild(button);
+      });
+    }
 
-      <main class="conversation">
-        <header class="chat-header">
-          <button class="hbtn" id="navToggle" type="button" aria-label="Toggle navigation">☰</button>
-          <div class="chat-header title"><span>#</span><span id="currentChannelLabel">general</span></div>
-          <div class="conn"><i></i>Online</div>
-          <button class="hbtn" type="button" id="newChannelBtn">+ New</button>
-        </header>
-
-        <section id="messages" class="messages" aria-live="polite"></section>
-
-        <div class="composer-wrap">
-          <div class="composer">
-            <textarea id="composer" rows="1" maxlength="2000" placeholder="Message #general"></textarea>
-            <button class="ibtn send" id="sendBtn" type="button" aria-label="Send message">➤</button>
-          </div>
-          <div class="hint">Press Enter to send · Shift + Enter for a new line</div>
-        </div>
-      </main>
-    </div>
-  </div>
-
-  <script>
-    (() => {
-      const STORAGE_KEY = 'kernals-chat-v1';
-      const defaultState = {
-        user: { name: 'Guest', color: '#4a5a50' },
-        activeServer: 'main',
-        activeChannel: 'general',
-        servers: [
-          {
-            id: 'main',
-            name: 'Northside',
-            initials: 'N',
-            channels: [
-              { id: 'general', name: 'general', type: 'channel' },
-              { id: 'announcements', name: 'announcements', type: 'channel' },
-              { id: 'help', name: 'help', type: 'channel' }
-            ],
-            dms: [
-              { id: 'mila', name: 'Mila', unread: false },
-              { id: 'leo', name: 'Leo', unread: true }
-            ]
-          }
-        ],
-        messages: {
-          main: {
-            general: [
-              { id: 1, author: 'Mila', text: 'Morning everyone — the new event list is live.', time: '09:14 AM' },
-              { id: 2, author: 'Guest', text: 'Looks good. I can help with the volunteer board.', time: '09:21 AM' }
-            ],
-            announcements: [
-              { id: 3, author: 'Kernals', text: 'Community cleanup is this Saturday at 10am.', time: '08:00 AM' }
-            ],
-            help: [
-              { id: 4, author: 'Leo', text: 'Need a hand with setup? Post here and we will help.', time: 'Yesterday' }
-            ],
-            mila: [
-              { id: 5, author: 'Mila', text: 'Can you take a look at the flyer draft?', time: 'Yesterday' }
-            ],
-            leo: [
-              { id: 6, author: 'Leo', text: 'I sent the updated map over.', time: 'Yesterday' }
-            ]
-          }
-        }
-      };
-
-      const authScreen = document.getElementById('authScreen');
-      const appScreen = document.getElementById('appScreen');
-      const authForm = document.getElementById('authForm');
-      const nameInput = document.getElementById('nameInput');
-      const authStatus = document.getElementById('authStatus');
-      const guestBtn = document.getElementById('guestBtn');
-      const serverRail = document.getElementById('serverRail');
-      const serverName = document.getElementById('serverName');
-      const channelList = document.getElementById('channelList');
-      const dmList = document.getElementById('dmList');
-      const profileName = document.getElementById('profileName');
-      const profileAvatar = document.getElementById('profileAvatar');
-      const currentChannelLabel = document.getElementById('currentChannelLabel');
-      const messagesEl = document.getElementById('messages');
-      const composer = document.getElementById('composer');
-      const sendBtn = document.getElementById('sendBtn');
-      const logoutBtn = document.getElementById('logoutBtn');
-      const layoutRoot = document.getElementById('layoutRoot');
-      const navToggle = document.getElementById('navToggle');
-      const newChannelBtn = document.getElementById('newChannelBtn');
-      const profileButton = document.getElementById('profileButton');
-
-      let state = loadState();
-
-      function loadState() {
-        try {
-          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-          if (!saved) return structuredClone(defaultState);
-          return {
-            ...structuredClone(defaultState),
-            ...saved,
-            user: { ...structuredClone(defaultState.user), ...(saved.user || {}) },
-            servers: saved.servers || structuredClone(defaultState.servers),
-            messages: saved.messages || structuredClone(defaultState.messages)
-          };
-        } catch (error) {
-          return structuredClone(defaultState);
-        }
+    function renderMessages(items) {
+      messagesEl.replaceChildren();
+      if (!items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'No messages yet. Start the conversation.';
+        messagesEl.appendChild(empty);
+        return;
       }
+      items.forEach((message, index) => {
+        const row = document.createElement('article');
+        row.className = 'msg' + (index === 0 ? ' first' : '');
+        const avatarColumn = document.createElement('div');
+        avatarColumn.className = 'av-col';
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        avatar.textContent = (message.author || '?').slice(0, 1).toUpperCase();
+        avatarColumn.appendChild(avatar);
 
-      function saveState() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      }
+        const body = document.createElement('div');
+        const head = document.createElement('div');
+        head.className = 'mhead';
+        const author = document.createElement('strong');
+        author.className = 'mname';
+        author.textContent = message.author || 'Guest';
+        const time = document.createElement('time');
+        time.className = 'mtime';
+        const date = message.createdAt?.toDate ? message.createdAt.toDate() : (message.createdAt ? new Date(message.createdAt) : null);
+        time.textContent = date && !Number.isNaN(date.getTime()) ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'Sending…';
+        head.append(author, time);
+        const text = document.createElement('div');
+        text.className = 'mtext';
+        text.textContent = message.text || '';
+        body.append(head, text);
+        row.append(avatarColumn, body);
+        messagesEl.appendChild(row);
+      });
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
 
-      function getActiveServer() {
-        return state.servers.find(server => server.id === state.activeServer) || state.servers[0];
-      }
+    function subscribeToChannel() {
+      if (stopListening) stopListening();
+      messagesEl.replaceChildren();
+      const messagesQuery = query(
+        collection(db, 'channels', currentChannel, 'messages'),
+        orderBy('createdAt', 'asc'),
+        limit(200)
+      );
+      stopListening = onSnapshot(messagesQuery, (snapshot) => {
+        setConnection('Connected', true);
+        renderMessages(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      }, (error) => {
+        console.error('Firestore listener error:', error);
+        setConnection('Database error');
+        renderMessages([]);
+        setStatus('Could not load messages. Check your Firestore database and security rules.', 'error');
+      });
+    }
 
-      function getActiveMessages() {
-        const server = getActiveServer();
-        if (!server) return [];
-        const key = state.activeChannel;
-        if (!state.messages[server.id]) state.messages[server.id] = {};
-        if (!state.messages[server.id][key]) state.messages[server.id][key] = [];
-        return state.messages[server.id][key];
-      }
+    function selectChannel(name) {
+      currentChannel = name;
+      $('currentChannelLabel').textContent = name;
+      composer.placeholder = 'Message #' + name;
+      layoutRoot.classList.remove('nav-open');
+      renderChannels();
+      subscribeToChannel();
+    }
 
-      function showAuth() {
-        authScreen.classList.remove('hidden');
-        appScreen.classList.add('hidden');
-        nameInput.value = state.user.name === 'Guest' ? '' : state.user.name;
-      }
-
-      function showApp() {
-        authScreen.classList.add('hidden');
-        appScreen.classList.remove('hidden');
-      }
-
-      function renderProfile() {
-        profileName.textContent = state.user.name || 'Guest';
-        profileAvatar.textContent = (state.user.name || 'G').charAt(0).toUpperCase();
-      }
-
-      function renderServers() {
-        serverRail.innerHTML = '';
-        state.servers.forEach((server) => {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = 'server' + (server.id === state.activeServer ? ' active' : '');
-          button.textContent = server.initials || server.name.slice(0, 1).toUpperCase();
-          button.title = server.name;
-          button.addEventListener('click', () => {
-            state.activeServer = server.id;
-            const firstChannel = server.channels[0]?.id || 'general';
-            state.activeChannel = firstChannel;
-            render();
-          });
-          serverRail.appendChild(button);
+    async function sendMessage() {
+      const text = composer.value.trim();
+      if (!text || sending) return;
+      sending = true;
+      sendBtn.disabled = true;
+      try {
+        await addDoc(collection(db, 'channels', currentChannel, 'messages'), {
+          author: displayName,
+          text,
+          createdAt: serverTimestamp()
         });
-      }
-
-      function renderChannels() {
-        const server = getActiveServer();
-        if (!server) return;
-        serverName.textContent = server.name;
-        channelList.innerHTML = '';
-
-        server.channels.forEach((channel) => {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = 'channel' + (channel.id === state.activeChannel ? ' active' : '');
-          button.innerHTML = '<span>#</span> ' + channel.name;
-          button.addEventListener('click', () => {
-            state.activeChannel = channel.id;
-            render();
-          });
-          channelList.appendChild(button);
-        });
-
-        dmList.innerHTML = '';
-        server.dms.forEach((dm) => {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = 'dm-item' + (dm.id === state.activeChannel ? ' active' : '');
-          const unread = dm.unread ? '<span class="dm-unread"></span>' : '';
-          button.innerHTML = unread + '<span class="dm-item n">' + dm.name + '</span>';
-          button.addEventListener('click', () => {
-            state.activeChannel = dm.id;
-            render();
-          });
-          dmList.appendChild(button);
-        });
-      }
-
-      function formatTime(date = new Date()) {
-        return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-      }
-
-      function renderMessages() {
-        const server = getActiveServer();
-        if (!server) return;
-
-        const messages = getActiveMessages();
-        messagesEl.innerHTML = '';
-
-        if (!messages.length) {
-          const empty = document.createElement('div');
-          empty.className = 'empty';
-          empty.textContent = 'No messages yet. Start the conversation.';
-          messagesEl.appendChild(empty);
-          return;
-        }
-
-        messages.forEach((message, index) => {
-          const row = document.createElement('div');
-          row.className = 'msg' + (index === 0 ? ' first' : '');
-
-          const avatarWrap = document.createElement('div');
-          avatarWrap.className = 'av-col';
-          const avatar = document.createElement('div');
-          avatar.className = 'avatar sm';
-          avatar.textContent = (message.author || 'U').charAt(0).toUpperCase();
-          avatarWrap.appendChild(avatar);
-
-          const content = document.createElement('div');
-          const head = document.createElement('div');
-          head.className = 'mhead';
-
-          const nameBtn = document.createElement('button');
-          nameBtn.type = 'button';
-          nameBtn.className = 'mname';
-          nameBtn.textContent = message.author || 'Unknown';
-          nameBtn.addEventListener('click', () => {
-            composer.focus();
-            composer.value = '@' + message.author + ' ' + composer.value;
-            composer.selectionStart = composer.selectionEnd = composer.value.length;
-          });
-
-          const time = document.createElement('span');
-          time.className = 'mtime';
-          time.textContent = message.time || formatTime();
-
-          head.appendChild(nameBtn);
-          head.appendChild(time);
-
-          const text = document.createElement('div');
-          text.className = 'mtext';
-          text.textContent = message.text || '';
-
-          content.appendChild(head);
-          content.appendChild(text);
-          row.appendChild(avatarWrap);
-          row.appendChild(content);
-          messagesEl.appendChild(row);
-        });
-
-        messagesEl.scrollTop = messagesEl.scrollHeight;
-      }
-
-      function renderHeader() {
-        const server = getActiveServer();
-        const channel = server.channels.find(item => item.id === state.activeChannel)
-          || server.dms.find(item => item.id === state.activeChannel);
-        const label = channel ? channel.name : 'general';
-        currentChannelLabel.textContent = label;
-        composer.placeholder = 'Message #' + label;
-      }
-
-      function render() {
-        renderServers();
-        renderChannels();
-        renderProfile();
-        renderHeader();
-        renderMessages();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      }
-
-      function addMessage(text) {
-        const server = getActiveServer();
-        if (!server) return;
-        if (!state.messages[server.id]) state.messages[server.id] = {};
-        if (!state.messages[server.id][state.activeChannel]) state.messages[server.id][state.activeChannel] = [];
-
-        state.messages[server.id][state.activeChannel].push({
-          id: Date.now(),
-          author: state.user.name || 'Guest',
-          text: text.trim(),
-          time: formatTime()
-        });
-
-        saveState();
-        renderMessages();
-      }
-
-      function handleSend() {
-        const text = composer.value.trim();
-        if (!text) return;
-        addMessage(text);
         composer.value = '';
         composer.style.height = '40px';
+        setStatus('', '');
+        composer.focus();
+      } catch (error) {
+        console.error('Firestore send error:', error);
+        setStatus('Message not sent. Check Firestore setup and security rules, then try again.', 'error');
+      } finally {
+        sending = false;
+        sendBtn.disabled = false;
       }
+    }
 
-      authForm.addEventListener('submit', (event) => {
+    function enterChat(name) {
+      displayName = name;
+      localStorage.setItem('kernals-display-name', displayName);
+      $('profileName').textContent = displayName;
+      $('profileAvatar').textContent = displayName.slice(0, 1).toUpperCase();
+      authScreen.classList.add('hidden');
+      appScreen.classList.remove('hidden');
+      setStatus('', '');
+      renderChannels();
+      selectChannel(currentChannel);
+    }
+
+    authForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const name = nameInput.value.trim().slice(0, 24);
+      if (!name) {
+        setStatus('Please enter a display name.', 'error');
+        nameInput.focus();
+        return;
+      }
+      enterChat(name);
+    });
+
+    $('guestBtn').addEventListener('click', () => enterChat('Guest'));
+    $('logoutBtn').addEventListener('click', () => {
+      if (stopListening) stopListening();
+      stopListening = null;
+      appScreen.classList.add('hidden');
+      authScreen.classList.remove('hidden');
+      nameInput.value = displayName === 'Guest' ? '' : displayName;
+      setStatus('Signed out.', '');
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+    composer.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
-        const value = nameInput.value.trim();
-        if (!value) {
-          authStatus.textContent = 'Please enter a display name.';
-          authStatus.className = 'status error';
-          nameInput.focus();
-          return;
-        }
-
-        state.user.name = value;
-        authStatus.textContent = 'Welcome back, ' + value + '!';
-        authStatus.className = 'status ok';
-        saveState();
-        showApp();
-        render();
-      });
-
-      guestBtn.addEventListener('click', () => {
-        state.user.name = 'Guest';
-        nameInput.value = '';
-        saveState();
-        showApp();
-        render();
-      });
-
-      logoutBtn.addEventListener('click', () => {
-        authStatus.textContent = 'Signed out.';
-        authStatus.className = 'status';
-        showAuth();
-      });
-
-      sendBtn.addEventListener('click', handleSend);
-
-      composer.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-          event.preventDefault();
-          handleSend();
-        }
-      });
-
-      composer.addEventListener('input', () => {
-        const rows = Math.max(1, Math.min(5, Math.ceil(composer.scrollHeight / 22)));
-        composer.style.height = 'auto';
-        composer.style.height = (rows * 20 + 16) + 'px';
-      });
-
-      navToggle.addEventListener('click', () => {
-        layoutRoot.classList.toggle('nav-open');
-      });
-
-      newChannelBtn.addEventListener('click', () => {
-        const name = window.prompt('Create a new channel name:', 'ideas');
-        if (!name) return;
-        const normalized = name.trim().toLowerCase().replace(/\s+/g, '-');
-        if (!normalized) return;
-
-        const server = getActiveServer();
-        const exists = server.channels.some(channel => channel.id === normalized);
-        if (exists) {
-          state.activeChannel = normalized;
-          render();
-          return;
-        }
-
-        server.channels.push({ id: normalized, name: normalized, type: 'channel' });
-        state.activeChannel = normalized;
-        if (!state.messages[server.id]) state.messages[server.id] = {};
-        if (!state.messages[server.id][normalized]) state.messages[server.id][normalized] = [];
-        saveState();
-        render();
-      });
-
-      profileButton.addEventListener('click', () => {
-        const next = window.prompt('Set your display name:', state.user.name || 'Guest');
-        if (next === null) return;
-        const value = next.trim();
-        if (!value) {
-          authStatus.textContent = 'Name cannot be empty.';
-          authStatus.className = 'status error';
-          return;
-        }
-        state.user.name = value;
-        saveState();
-        render();
-      });
-
-      window.addEventListener('click', (event) => {
-        if (window.innerWidth > 800) return;
-        if (layoutRoot.classList.contains('nav-open') && !event.target.closest('.nav') && !event.target.closest('#navToggle')) {
-          layoutRoot.classList.remove('nav-open');
-        }
-      });
-
-      if (!state.user || !state.user.name) {
-        state.user = { ...structuredClone(defaultState.user) };
+        sendMessage();
       }
+    });
+    composer.addEventListener('input', () => {
+      composer.style.height = 'auto';
+      composer.style.height = Math.min(composer.scrollHeight, 140) + 'px';
+    });
+    $('navToggle').addEventListener('click', () => layoutRoot.classList.toggle('nav-open'));
+    $('newChannelBtn').addEventListener('click', () => {
+      const value = window.prompt('New channel name:');
+      if (!value) return;
+      const name = value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+      if (!name) return;
+      if (!channels.includes(name)) channels.push(name);
+      selectChannel(name);
+    });
 
-      showAuth();
-      render();
-    })();
+    if (displayName && displayName !== 'Guest') {
+      nameInput.value = displayName;
+      enterChat(displayName);
+    } else {
+      $('profileName').textContent = 'Guest';
+    }
   </script>
 </body>
 </html>
